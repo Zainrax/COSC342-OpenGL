@@ -38,7 +38,7 @@ void MTLShader::setUpShaderParameters(){
 void MTLShader::setTexture(Texture* texture){
     m_texture = texture;
     // Get a handle for our "myTextureSampler" uniform
-	
+	m_TextureID = glGetUniformLocation(programID, "myTextureSampler");
 }
 
 
@@ -57,23 +57,31 @@ void MTLShader::setDiffuse(glm::vec3 diffuse){
 void MTLShader::setAmbient(glm::vec3 ambient){
     
     m_ambientColor= glm::vec4(ambient[0],ambient[1],ambient[2],1.0);
+    GLint ambientcolorID = glGetUniformLocation(programID, "ambientColor");
+    glProgramUniform4fv(programID,ambientcolorID,1, &m_diffuseColor[0]);
 	
 }
 void MTLShader::setSpecular(glm::vec3 specular){
     
     m_specularColor= glm::vec4(specular[0],specular[1],specular[2],1.0);
+    GLint specularcolorID = glGetUniformLocation(programID, "specularColor");
+    glProgramUniform4fv(programID,specularcolorID,1, &m_specularColor[0]);
 	
 }
 
 void MTLShader::setOpacity(float opacity){
     
     m_opacity= opacity;
+    GLint opacityID = glGetUniformLocation(programID, "opacity");
+    glProgramUniform1f(programID,opacityID, m_opacity);
 	
 }
 
 void MTLShader::setRenderMode(float renderMode){
     
     m_renderMode= renderMode;
+    GLint renderModeID = glGetUniformLocation(programID, "renderMode");
+    glProgramUniform1f(programID,renderModeID,m_renderMode);
  
 }
 
@@ -85,7 +93,7 @@ void MTLShader::bind(){
     if(m_texture!=NULL){
         m_texture->bindTexture();
         // Set our "myTextureSampler" sampler to user Texture Unit 0 using glUniform1i
-		
+		glUniform1i(m_TextureID,0);
     }
     
 }

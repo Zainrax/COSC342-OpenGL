@@ -49,18 +49,18 @@ void Group::init(){
 }
 void Group::render(Camera* camera){
    //TODO: Make sure all meshes are rendered - at the moment only the first one is rendered
-    if(meshes.size()>0){
-		meshes[0]->bindShaders();
-        meshes[0]->render(camera);
+    for(int i = 0; i < meshes.size(); i++){
+		meshes[i]->bindShaders();
+        meshes[i]->render(camera);
         
     }
     
 }
-
+//Changed indexing from 0 to a for loop
 void Group::setupShaders(){
 	//TODO: Do this for all meshes
-	if(meshes.size()>0){
-		int matIndex = 0; // TODO: get the correct material index from obj file
+	for(int i = 0; i < meshes.size();i++){
+		int matIndex = meshes[i]->getMatIndex(); // TODO: get the correct material index from obj file
         Material* mat = getMaterial(matIndex);
         Shader* shader = NULL;
         if(!mat->shaderIsInitialized()){
@@ -80,7 +80,7 @@ void Group::setupShaders(){
         else {
             shader = mat->getShader();
         }
-        meshes[0]->setShader(shader);
+        meshes[i]->setShader(shader);
         
     }
 }

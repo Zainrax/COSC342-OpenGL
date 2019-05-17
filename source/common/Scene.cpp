@@ -20,6 +20,4 @@ void Scene::render(Camera* camera){
 
 void Scene::addObject(Object *object){
     sceneObjects.push_back(object);
-    
 }
-

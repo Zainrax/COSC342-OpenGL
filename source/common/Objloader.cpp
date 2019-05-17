@@ -32,8 +32,8 @@ bool loadOBJMTL(
     
     // store the first child a geometry
     //TODO: Do this for all child meshes - at the moment only the first mesh is processed
-    if(scene->mNumMeshes>0){
-        int meshindex = 0;
+    for(int i = 0; i < scene->mNumMeshes; i++){
+        int meshindex = i;
         std::vector<unsigned short> indices;
         std::vector<glm::vec3> indexed_vertices;
         std::vector<glm::vec2> indexed_uvs;
@@ -91,17 +91,37 @@ bool loadOBJMTL(
     //TODO: make sure to load all materials - at the moment we load only one material - use scene->mNumMaterials to access all materials
     //TODO: make sure to get all material parameters, at the moment we only set the diffuse color. Add ambient, specular, transparency as well
     //TODO: use scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE,0, &texpath, NULL,NULL, NULL,NULL,NULL) == AI_SUCCESS) to access texture path
-    if(scene->mNumMaterials >0){
-        Material* newMat = new Material();
-        if(scene->mMaterials[0]!=NULL){
-            
-            aiColor3D color (0.f,0.f,0.f);
-            scene->mMaterials[0]->Get(AI_MATKEY_COLOR_DIFFUSE,color);
-            newMat->setDiffuseColour(glm::vec3(color[0],color[1],color[2]));
-            
+
+	for(int i = 0; i < scene->mNumMaterials; i++) {
+        Material *newMat = new Material();
+        aiString texpath;
+        if (scene->mMaterials[i] != NULL) {
+
+            aiColor3D color(0.f, 0.f, 0.f);
+            scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+            newMat->setDiffuseColour(glm::vec3(color[0], color[1], color[2]));
+            scene->mMaterials[i]->Get(AI_MATKEY_COLOR_AMBIENT, color);
+            newMat->setAmbientColour(glm::vec3(color[0], color[1], color[2]));
+            scene->mMaterials[i]->Get(AI_MATKEY_COLOR_SPECULAR, color);
+            newMat->setSpecularColour(glm::vec3(color[0], color[1], color[2]));
+
+            float opacity = 0.0;
+            scene->mMaterials[i]->Get(AI_MATKEY_OPACITY, opacity);
+            newMat->setOpacity(opacity);
+
+            float shininess = 0.0;
+            scene->mMaterials[i]->Get(AI_MATKEY_SHININESS, shininess);
+            newMat->setShininess(shininess);
+
+            if (scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &texpath, NULL, NULL, NULL, NULL, NULL) ==
+                AI_SUCCESS) {
+                newMat->setTextureName(texpath.C_Str());
+            }
+
+            outputmesh->addMaterial(newMat);
         }
-        outputmesh->addMaterial(newMat);
     }
+
     
     // The "scene" pointer will be deleted automatically by "importer"
     
@@ -220,43 +240,44 @@ bool loadAssImp(
 		getchar();
 		return false;
 	}
-	const aiMesh* mesh = scene->mMeshes[0]; // In this simple example code we always use the 1rst mesh (in OBJ files there is often only one anyway)
-
-  
-	// Fill vertices positions
-	vertices.reserve(mesh->mNumVertices);
-	for(unsigned int i=0; i<mesh->mNumVertices; i++){
-		aiVector3D pos = mesh->mVertices[i];
-		vertices.push_back(glm::vec3(pos.x, pos.y, pos.z));
-	}
-
-	// Fill vertices texture coordinates
-	uvs.reserve(mesh->mNumVertices);
-	for(unsigned int i=0; i<mesh->mNumVertices; i++){
-		aiVector3D UVW = mesh->mTextureCoords[0][i]; // Assume only 1 set of UV coords; AssImp supports 8 UV sets.
-		if(!flipUV)
-            uvs.push_back(glm::vec2(UVW.x, UVW.y));
-        else
-            uvs.push_back(glm::vec2(UVW.x, 1.0-UVW.y));
-	}
-
-	// Fill vertices normals
-	normals.reserve(mesh->mNumVertices);
-	for(unsigned int i=0; i<mesh->mNumVertices; i++){
-		aiVector3D n = mesh->mNormals[i];
-		normals.push_back(glm::vec3(n.x, n.y, n.z));
-	}
+    for(int j = 0; j < scene->mNumMeshes;j++) {
+        const aiMesh *mesh = scene->mMeshes[j]; // In this simple example code we always use the 1rst mesh (in OBJ files there is often only one anyway)
 
 
-	// Fill face indices
-	indices.reserve(3*mesh->mNumFaces);
-	for (unsigned int i=0; i<mesh->mNumFaces; i++){
-		// Assume the model has only triangles.
-		indices.push_back(mesh->mFaces[i].mIndices[0]);
-		indices.push_back(mesh->mFaces[i].mIndices[1]);
-		indices.push_back(mesh->mFaces[i].mIndices[2]);
-	}
-	
+        // Fill vertices positions
+        vertices.reserve(mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            aiVector3D pos = mesh->mVertices[i];
+            vertices.push_back(glm::vec3(pos.x, pos.y, pos.z));
+        }
+
+        // Fill vertices texture coordinates
+        uvs.reserve(mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            aiVector3D UVW = mesh->mTextureCoords[0][i]; // Assume only 1 set of UV coords; AssImp supports 8 UV sets.
+            if (!flipUV)
+                uvs.push_back(glm::vec2(UVW.x, UVW.y));
+            else
+                uvs.push_back(glm::vec2(UVW.x, 1.0 - UVW.y));
+        }
+
+        // Fill vertices normals
+        normals.reserve(mesh->mNumVertices);
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            aiVector3D n = mesh->mNormals[i];
+            normals.push_back(glm::vec3(n.x, n.y, n.z));
+        }
+
+
+        // Fill face indices
+        indices.reserve(3 * mesh->mNumFaces);
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+            // Assume the model has only triangles.
+            indices.push_back(mesh->mFaces[i].mIndices[0]);
+            indices.push_back(mesh->mFaces[i].mIndices[1]);
+            indices.push_back(mesh->mFaces[i].mIndices[2]);
+        }
+    }
 	// The "scene" pointer will be deleted automatically by "importer"
 	return true;
 
